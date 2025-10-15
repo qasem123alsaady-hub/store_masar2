@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام إدارة المخزون - نظام الصلاحيات</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<style>
+* {
+box-sizing: border-box;
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+body {
+margin: 0;
+padding: 0;
+background-color: #f5f5f5;
+color: #333;
+}
+.container {
+max-width: 1400px;
+margin: 0 auto;
+display: flex;
+min-height: 100vh;
+}
+/* شريط التنقل الجانبي */
+.sidebar {
+width: 250px;
+background-color: #2c3e50;
+color: white;
+padding: 20px 0;
+}
+.sidebar h2 {
+text-align: center;
+margin-bottom: 30px;
+padding-bottom: 15px;
+border-bottom: 1px solid #34495e;
+}
+.nav-links {
+list-style: none;
+padding: 0;
+}
+.nav-links li {
+padding: 0;
+}
+.nav-links a {
+display: block;
+padding: 15px 25px;
+color: #ecf0f1;
+text-decoration: none;
+transition: background-color 0.3s;
+}
+.nav-links a:hover, .nav-links a.active {
+background-color: #34495e;
+border-right: 4px solid #3498db;
+}
+/* المحتوى الرئيسي */
+.main-content {
+flex: 1;
+padding: 20px;
+background-color: white;
+}
+.page {
+display: none;
+}
+.page.active {
+display: block;
+}
+h1, h2 {
+color: #2c3e50;
+}
+.form-section, .dashboard-section, .transaction-section, .reports-section, .login-section {
+margin-bottom: 30px;
+padding: 20px;
+border: 1px solid #ddd;
+border-radius: 5px;
+}
+.form-group {
+margin-bottom: 15px;
+}
+label {
+display: block;
+margin-bottom: 5px;
+font-weight: bold;
+}
+input, select, button {
+width: 100%;
+padding: 10px;
+border: 1px solid #ddd;
+border-radius: 4px;
+font-size: 16px;
+}
+button {
+background-color: #3498db;
+color: white;
+border: none;
+cursor: pointer;
+transition: background-color 0.3s;
+}
+button:hover {
+background-color: #2980b9;
+}
+table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 20px;
+}
+th, td {
+padding: 12px 15px;
+text-align: right;
+border-bottom: 1px solid #ddd;
+}
+th {
+background-color: #f2f2f2;
+font-weight: bold;
+}
+tr:hover {
+background-color: #f9f9f9;
+}
+.actions button {
+width: auto;
+margin: 0 5px;
+padding: 5px 10px;
+font-size: 14px;
+}
+.edit-btn {
+background-color: #f39c12;
+}
+.edit-btn:hover {
+background-color: #e67e22;
+}
+.delete-btn {
+background-color: #e74c3c;
+}
+.delete-btn:hover {
+background-color: #c0392b;
+}
+.delete-transaction-btn {
+background-color: #e74c3c;
+padding: 3px 8px;
+font-size: 12px;
+}
+.delete-transaction-btn:hover {
+background-color: #c0392b;
+}
+.input-btn {
+background-color: #27ae60;
+}
+.input-btn:hover {
+background-color: #219653;
+}
+.output-btn {
+background-color: #e74c3c;
+}
+.output-btn:hover {
+background-color: #c0392b;
+}
+.export-btn {
+background-color: #9b59b6;
+}
+.export-btn:hover {
+background-color: #8e44ad;
+}
+.login-btn {
+background-color: #2ecc71;
+}
+.login-btn:hover {
+background-color: #27ae60;
+}
+.logout-btn {
+background-color: #e74c3c;
+width: auto;
+padding: 8px 15px;
+margin-bottom: 20px;
+}
+.logout-btn:hover {
+background-color: #c0392b;
+}
+.stats {
+display: flex;
+justify-content: space-around;
+margin-top: 20px;
+padding: 15px;
+background-color: #ecf0f1;
+border-radius: 5px;
+}
+.stat-item {
+text-align: center;
+}
+.stat-value {
+font-size: 24px;
+font-weight: bold;
+color: #2c3e50;
+}
+.stat-label {
+font-size: 14px;
+color: #7f8c8d;
+}
+.categories-section {
+margin-top: 20px;
+padding: 15px;
+border: 1px solid #ddd;
+border-radius: 5px;
+}
+.categories-list {
+display: flex;
+flex-wrap: wrap;
+gap: 10px;
+margin-top: 10px;
+}
+.category-tag {
+background-color: #3498db;
+color: white;
+padding: 5px 10px;
+border-radius: 20px;
+font-size: 14px;
+}
+.low-stock {
+background-color: #ffebee;
+}
+.low-stock td {
+color: #e53935;
+font-weight: bold;
+}
+.alert-badge {
+background-color: #e53935;
+color: white;
+border-radius: 50%;
+width: 20px;
+height: 20px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+font-size: 12px;
+margin-right: 5px;
+}
+.transaction-history {
+margin-top: 30px;
+}
+.input-row {
+background-color: #e8f5e9;
+}
+.output-row {
+background-color: #ffebee;
+}
+.products-table {
+margin-top: 30px;
+}
+.report-filters {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+gap: 15px;
+margin-bottom: 20px;
+padding: 15px;
+background-color: #f8f9fa;
+border-radius: 5px;
+}
+.export-buttons {
+display: flex;
+gap: 10px;
+margin: 20px 0;
+flex-wrap: wrap;
+}
+.export-buttons button {
+width: auto;
+padding: 10px 20px;
+}
+.report-summary {
+background-color: #e3f2fd;
+padding: 15px;
+border-radius: 5px;
+margin: 20px 0;
+}
+.user-info {
+background-color: #2c3e50;
+color: white;
+padding: 10px 15px;
+border-radius: 5px;
+margin-bottom: 20px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.user-role {
+background-color: #3498db;
+padding: 3px 8px;
+border-radius: 10px;
+font-size: 12px;
+}
+.restricted {
+opacity: 0.6;
+pointer-events: none;
+position: relative;
+}
+.restricted::after {
+content: "غير مسموح";
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+background-color: rgba(231, 76, 60, 0.9);
+color: white;
+padding: 5px 10px;
+border-radius: 5px;
+font-size: 14px;
+}
+.hidden {
+display: none !important;
+}
+.transaction-actions {
+display: flex;
+gap: 5px;
+justify-content: center;
+}
+@media (max-width: 768px) {
+.container {
+flex-direction: column;
+}
+.sidebar {
+width: 100%;
+}
+.stats {
+flex-direction: column;
+}
+.stat-item {
+margin-bottom: 15px;
+}
+.actions {
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+.actions button {
+width: 100%;
+margin: 2px 0;
+}
+.export-buttons {
+flex-direction: column;
+}
+.export-buttons button {
+width: 100%;
+}
+.user-info {
+flex-direction: column;
+gap: 10px;
+text-align: center;
+}
+.transaction-actions {
+flex-direction: column;
+}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<!-- شريط التنقل الجانبي -->
+<div class="sidebar">
+<h2>نظام إدارة المخزون</h2>
+<ul class="nav-links">
+<li><a href="#" class="nav-link active" data-page="dashboard">لوحة التحكم المركزية</a></li>
+<li><a href="#" class="nav-link" data-page="products">إدارة المنتجات</a></li>
+<li><a href="#" class="nav-link" data-page="inputs">مدخلات المخزن</a></li>
+<li><a href="#" class="nav-link" data-page="outputs">مخرجات المخزن</a></li>
+<li><a href="#" class="nav-link reports-link" data-page="transactions">سجل الحركات</a></li>
+<li><a href="#" class="nav-link reports-link" data-page="reports">التقارير</a></li>
+</ul>
+</div>
+<!-- المحتوى الرئيسي -->
+<div class="main-content">
+<!-- صفحة تسجيل الدخول -->
+<div id="login" class="page active">
+<div class="login-section">
+<h1>تسجيل الدخول</h1>
+<form id="loginForm">
+<div class="form-group">
+<label for="username">اسم المستخدم:</label>
+<input type="text" id="username" required>
+</div>
+<div class="form-group">
+<label for="password">كلمة المرور:</label>
+<input type="password" id="password" required>
+</div>
+<div class="form-group">
+<label for="userType">نوع الحساب:</label>
+<select id="userType" required>
+<option value="">اختر نوع الحساب</option>
+<option value="admin">مدير النظام (صلاحيات كاملة)</option>
+<option value="user">مستخدم عادي (صلاحيات محدودة)</option>
+</select>
+</div>
+<button type="submit" class="login-btn">تسجيل الدخول</button>
+</form>
+
+</div>
+</div>
+<!-- صفحة لوحة التحكم المركزية -->
+<div id="dashboard" class="page">
+<div class="user-info">
+<div>
+<span>مرحباً, <strong id="currentUserName">المستخدم</strong></span>
+<span class="user-role" id="currentUserRole">مدير النظام</span>
+</div>
+<button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+</div>
+<h1>لوحة التحكم المركزية</h1>
+<div class="stats">
+<div class="stat-item">
+<div class="stat-value" id="totalProducts">0</div>
+<div class="stat-label">إجمالي المنتجات</div>
+</div>
+<div class="stat-item">
+<div class="stat-value" id="totalQuantity">0</div>
+<div class="stat-label">إجمالي الكمية</div>
+</div>
+<div class="stat-item">
+<div class="stat-value" id="totalCategories">0</div>
+<div class="stat-label">إجمالي الفئات</div>
+</div>
+<div class="stat-item">
+<div class="stat-value" id="lowStockItems">0</div>
+<div class="stat-label">منتجات تحت الحد الأدنى</div>
+</div>
+</div>
+<div class="dashboard-section">
+<h2>المخزون الحالي</h2>
+<table id="inventoryTable">
+<thead>
+<tr>
+<th>اسم المنتج</th>
+<th>الفئة</th>
+<th>الكمية</th>
+<th>الحد الأدنى للطلب</th>
+<th>الحالة</th>
+</tr>
+</thead>
+<tbody id="inventoryBody">
+<!-- سيتم ملؤها بالبيانات من JavaScript -->
+</tbody>
+</table>
+</div>
+</div>
+<!-- صفحة إدارة المنتجات -->
+<div id="products" class="page">
+<div class="user-info">
+<div>
+<span>مرحباً, <strong id="currentUserNameProducts">المستخدم</strong></span>
+<span class="user-role" id="currentUserRoleProducts">مدير النظام</span>
+</div>
+<button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+</div>
+<h1>إدارة المنتجات</h1>
+<div class="form-section" id="productFormSection">
+<h2>إضافة / تعديل منتج</h2>
+<form id="productForm">
+<input type="hidden" id="productId">
+<div class="form-group">
+<label for="productName">اسم المنتج:</label>
+<input type="text" id="productName" required>
+</div>
+<div class="form-group">
+<label for="productCategory">الفئة:</label>
+<input type="text" id="productCategory" list="categoriesList" required>
+<datalist id="categoriesList">
+<!-- سيتم ملؤها تلقائياً من الفئات الموجودة -->
+</datalist>
+</div>
+<div class="form-group">
+<label for="productQuantity">الكمية:</label>
+<input type="number" id="productQuantity" min="0" required>
+</div>
+<div class="form-group">
+<label for="minOrder">الحد الأدنى للطلب:</label>
+<input type="number" id="minOrder" min="0" required>
+</div>
+<button type="submit" id="submitBtn">إضافة منتج</button>
+</form>
+</div>
+<div class="categories-section">
+<h3>الفئات المتاحة</h3>
+<div class="categories-list" id="categoriesContainer">
+<!-- سيتم ملؤها بالبيانات من JavaScript -->
+</div>
+</div>
+<div class="products-table">
+<h2>قائمة المنتجات</h2>
+<table id="productsTable">
+<thead>
+<tr>
+<th>اسم المنتج</th>
+<th>الفئة</th>
+<th>الكمية</th>
+<th>الحد الأدنى للطلب</th>
+<th>الإجراءات</th>
+</tr>
+</thead>
+<tbody id="productsBody">
+<!-- سيتم ملؤها بالبيانات من JavaScript -->
+</tbody>
+</table>
+</div>
+</div>
+<!-- صفحة مدخلات المخزن -->
+<div id="inputs" class="page">
+<div class="user-info">
+<div>
+<span>مرحباً, <strong id="currentUserNameInputs">المستخدم</strong></span>
+<span class="user-role" id="currentUserRoleInputs">مدير النظام</span>
+</div>
+<button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+</div>
+<h1>مدخلات المخزن</h1>
+<div class="transaction-section">
+<h2>إضافة كمية جديدة للمنتج</h2>
+<form id="inputForm">
+<div class="form-group">
+<label for="inputProduct">اختر المنتج:</label>
+<select id="inputProduct" required>
+<option value="">اختر المنتج</option>
+</select>
+</div>
+<div class="form-group">
+<label for="inputQuantity">الكمية المضافة:</label>
+<input type="number" id="inputQuantity" min="1" required>
+</div>
+<div class="form-group">
+<label for="inputPerson">اسم المدخل:</label>
+<input type="text" id="inputPerson" required>
+</div>
+<div class="form-group">
+<label for="inputDate">تاريخ الإدخال:</label>
+<input type="date" id="inputDate" required>
+</div>
+<button type="submit" class="input-btn">إضافة إلى المخزن</button>
+</form>
+</div>
+<div class="transaction-history">
+<h2>سجل المدخلات</h2>
+<table id="inputsTable">
+<thead>
+<tr>
+<th>التاريخ</th>
+<th>اسم المنتج</th>
+<th>الكمية</th>
+<th>اسم المدخل</th>
+<th class="admin-only-header">الإجراءات</th>
+</tr>
+</thead>
+<tbody id="inputsBody">
+<!-- سيتم ملؤها بالبيانات من JavaScript -->
+</tbody>
+</table>
+</div>
+</div>
+<!-- صفحة مخرجات المخزن -->
+<div id="outputs" class="page">
+<div class="user-info">
+<div>
+<span>مرحباً, <strong id="currentUserNameOutputs">المستخدم</strong></span>
+<span class="user-role" id="currentUserRoleOutputs">مدير النظام</span>
+</div>
+<button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+</div>
+<h1>مخرجات المخزن</h1>
+<div class="transaction-section">
+<h2>إخراج كمية من المنتج</h2>
+<form id="outputForm">
+<div class="form-group">
+<label for="outputProduct">اختر المنتج:</label>
+<select id="outputProduct" required>
+<option value="">اختر المنتج</option>
+</select>
+</div>
+<div class="form-group">
+<label for="outputQuantity">الكمية المخرجة:</label>
+<input type="number" id="outputQuantity" min="1" required>
+</div>
+<div class="form-group">
+<label for="outputPerson">اسم المخرج:</label>
+<input type="text" id="outputPerson" required>
+</div>
+<div class="form-group">
+<label for="outputDate">تاريخ الإخراج:</label>
+<input type="date" id="outputDate" required>
+</div>
+<button type="submit" class="output-btn">إخراج من المخزن</button>
+</form>
+</div>
+<div class="transaction-history">
+<h2>سجل المخرجات</h2>
+<table id="outputsTable">
+<thead>
+<tr>
+<th>التاريخ</th>
+<th>اسم المنتج</th>
+<th>الكمية</th>
+<th>اسم المخرج</th>
+<th class="admin-only-header">الإجراءات</th>
+</tr>
+</thead>
+<tbody id="outputsBody">
+<!-- سيتم ملؤها بالبيانات من JavaScript -->
+</tbody>
+</table>
+</div>
+</div>
+<!-- صفحة سجل الحركات -->
+<div id="transactions" class="page">
+<div class="user-info">
+<div>
+<span>مرحباً, <strong id="currentUserNameTransactions">المستخدم</strong></span>
+<span class="user-role" id="currentUserRoleTransactions">مدير النظام</span>
+</div>
+<button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+</div>
+<h1>سجل حركات المخزن</h1>
+<div class="transaction-history">
+<h2>جميع الحركات</h2>
+<table id="transactionsTable">
+<thead>
+<tr>
+<th>التاريخ</th>
+<th>نوع الحركة</th>
+<th>اسم المنتج</th>
+<th>الكمية</th>
+<th>المستخدم</th>
+<th class="admin-only-header">الإجراءات</th>
+</tr>
+</thead>
+<tbody id="transactionsBody">
+<!-- سيتم ملؤها بالبيانات من JavaScript -->
+</tbody>
+</table>
+</div>
+</div>
+<!-- صفحة التقارير -->
+<div id="reports" class="page">
+<div class="user-info">
+<div>
+<span>مرحباً, <strong id="currentUserNameReports">المستخدم</strong></span>
+<span class="user-role" id="currentUserRoleReports">مدير النظام</span>
+</div>
+<button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+</div>
+<h1>تقارير المخزون</h1>
+<div class="reports-section">
+<h2>تصفية البيانات</h2>
+<div class="report-filters">
+<div class="form-group">
+<label for="reportType">نوع التقرير:</label>
+<select id="reportType">
+<option value="inventory">تقرير المخزون الحالي</option>
+<option value="movements">تقرير حركات المخزون</option>
+<option value="lowstock">تقرير المنتجات المنخفضة</option>
+<option value="inputs">تقرير المدخلات</option>
+<option value="outputs">تقرير المخرجات</option>
+</select>
+</div>
+<div class="form-group">
+<label for="startDate">من تاريخ:</label>
+<input type="date" id="startDate">
+</div>
+<div class="form-group">
+<label for="endDate">إلى تاريخ:</label>
+<input type="date" id="endDate">
+</div>
+<div class="form-group">
+<label for="reportCategory">الفئة:</label>
+<select id="reportCategory">
+<option value="">جميع الفئات</option>
+</select>
+</div>
+</div>
+<div class="export-buttons">
+<button class="export-btn" onclick="generateReport()">عرض التقرير</button>
+<button class="export-btn" onclick="exportToExcel()">تصدير إلى Excel</button>
+<button class="export-btn" onclick="exportToPDF()">تصدير إلى PDF</button>
+</div>
+<div class="report-summary" id="reportSummary">
+<!-- سيتم ملؤها بالبيانات من JavaScript -->
+</div>
+<div id="reportResults">
+<!-- سيتم ملؤها بالبيانات من JavaScript -->
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+// بيانات المستخدمين
+const users = {
+admin: { password: 'admin123', role: 'admin', name: 'مدير النظام' },
+user: { password: 'user123', role: 'user', name: 'مستخدم عادي' }
+};
+// بيانات التطبيق
+let currentUser = null;
+let products = JSON.parse(localStorage.getItem('inventoryProducts')) || [];
+let categories = JSON.parse(localStorage.getItem('inventoryCategories')) || [];
+let inputs = JSON.parse(localStorage.getItem('inventoryInputs')) || [];
+let outputs = JSON.parse(localStorage.getItem('inventoryOutputs')) || [];
+let editingProductId = null;
+// عناصر DOM
+const loginForm = document.getElementById('loginForm');
+const productForm = document.getElementById('productForm');
+const inputForm = document.getElementById('inputForm');
+const outputForm = document.getElementById('outputForm');
+const productIdInput = document.getElementById('productId');
+const productNameInput = document.getElementById('productName');
+const productCategoryInput = document.getElementById('productCategory');
+const productQuantityInput = document.getElementById('productQuantity');
+const minOrderInput = document.getElementById('minOrder');
+const inputProductSelect = document.getElementById('inputProduct');
+const inputQuantityInput = document.getElementById('inputQuantity');
+const inputPersonInput = document.getElementById('inputPerson');
+const inputDateInput = document.getElementById('inputDate');
+const outputProductSelect = document.getElementById('outputProduct');
+const outputQuantityInput = document.getElementById('outputQuantity');
+const outputPersonInput = document.getElementById('outputPerson');
+const outputDateInput = document.getElementById('outputDate');
+const submitBtn = document.getElementById('submitBtn');
+const inventoryBody = document.getElementById('inventoryBody');
+const productsBody = document.getElementById('productsBody');
+const inputsBody = document.getElementById('inputsBody');
+const outputsBody = document.getElementById('outputsBody');
+const transactionsBody = document.getElementById('transactionsBody');
+const categoriesContainer = document.getElementById('categoriesContainer');
+const categoriesList = document.getElementById('categoriesList');
+const reportCategorySelect = document.getElementById('reportCategory');
+const totalProductsEl = document.getElementById('totalProducts');
+const totalQuantityEl = document.getElementById('totalQuantity');
+const totalCategoriesEl = document.getElementById('totalCategories');
+const lowStockItemsEl = document.getElementById('lowStockItems');
+const navLinks = document.querySelectorAll('.nav-link');
+const pages = document.querySelectorAll('.page');
+const reportSummary = document.getElementById('reportSummary');
+const reportResults = document.getElementById('reportResults');
+const reportsLinks = document.querySelectorAll('.reports-link');
+// توليد معرف فريد للمنتج
+function generateId() {
+return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+// حفظ البيانات في localStorage
+function saveData() {
+localStorage.setItem('inventoryProducts', JSON.stringify(products));
+localStorage.setItem('inventoryCategories', JSON.stringify(categories));
+localStorage.setItem('inventoryInputs', JSON.stringify(inputs));
+localStorage.setItem('inventoryOutputs', JSON.stringify(outputs));
+}
+// تحديث واجهة المستخدم حسب الصلاحيات
+function updateUIForPermissions() {
+const isAdmin = currentUser.role === 'admin';
+// تحديث معلومات المستخدم في جميع الصفحات
+document.querySelectorAll('[id^="currentUserName"]').forEach(el => {
+el.textContent = currentUser.name;
+});
+document.querySelectorAll('[id^="currentUserRole"]').forEach(el => {
+el.textContent = isAdmin ? 'مدير النظام' : 'مستخدم عادي';
+});
+// إظهار/إخفاء أقسام حسب الصلاحيات
+if (!isAdmin) {
+// إخفاء أزرار الحذف والتعديل
+document.querySelectorAll('.delete-btn, .edit-btn').forEach(btn => {
+btn.classList.add('restricted');
+});
+// إخفاء قسم التقارير من القائمة
+reportsLinks.forEach(link => {
+link.classList.add('hidden');
+});
+// إخفاء أزرار التصدير
+document.querySelectorAll('.export-btn').forEach(btn => {
+btn.classList.add('restricted');
+});
+// إخفاء قسم إضافة/تعديل المنتجات
+document.getElementById('productFormSection').classList.add('restricted');
+// إخفاء أعمدة الإجراءات في الجداول
+document.querySelectorAll('.admin-only-header').forEach(header => {
+header.classList.add('hidden');
+});
+} else {
+// إظهار كل شيء للمدير
+document.querySelectorAll('.restricted').forEach(el => {
+el.classList.remove('restricted');
+});
+reportsLinks.forEach(link => {
+link.classList.remove('hidden');
+});
+document.getElementById('productFormSection').classList.remove('restricted');
+// إظهار أعمدة الإجراءات في الجداول
+document.querySelectorAll('.admin-only-header').forEach(header => {
+header.classList.remove('hidden');
+});
+}
+}
+// تسجيل الدخول
+loginForm.addEventListener('submit', function(e) {
+e.preventDefault();
+const username = document.getElementById('username').value;
+const password = document.getElementById('password').value;
+const userType = document.getElementById('userType').value;
+if (!username || !password || !userType) {
+alert('يرجى ملء جميع الحقول');
+return;
+}
+// التحقق من بيانات المستخدم
+if (users[username] && users[username].password === password && users[username].role === userType) {
+currentUser = {
+username: username,
+role: userType,
+name: users[username].name
+};
+// حفظ حالة المستخدم
+localStorage.setItem('currentUser', JSON.stringify(currentUser));
+// الانتقال إلى لوحة التحكم
+showPage('dashboard');
+updateUIForPermissions();
+renderProducts();
+renderInputs();
+renderOutputs();
+renderTransactions();
+updateCategories();
+} else {
+alert('بيانات الدخول غير صحيحة');
+}
+});
+// تسجيل الخروج
+function logout() {
+currentUser = null;
+localStorage.removeItem('currentUser');
+showPage('login');
+loginForm.reset();
+}
+// التحقق من حالة المستخدم عند تحميل الصفحة
+function checkUserStatus() {
+const savedUser = localStorage.getItem('currentUser');
+if (savedUser) {
+currentUser = JSON.parse(savedUser);
+showPage('dashboard');
+updateUIForPermissions();
+renderProducts();
+renderInputs();
+renderOutputs();
+renderTransactions();
+updateCategories();
+} else {
+showPage('login');
+}
+}
+// إظهار صفحة محددة
+function showPage(pageId) {
+pages.forEach(page => page.classList.remove('active'));
+navLinks.forEach(link => link.classList.remove('active'));
+document.getElementById(pageId).classList.add('active');
+if (pageId !== 'login') {
+document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+}
+}
+// التنقل بين الصفحات
+navLinks.forEach(link => {
+link.addEventListener('click', function(e) {
+e.preventDefault();
+if (!currentUser) return;
+const pageId = this.getAttribute('data-page');
+showPage(pageId);
+});
+});
+// تحديث الإحصائيات
+function updateStats() {
+const totalProducts = products.length;
+const totalQuantity = products.reduce((sum, product) => sum + parseInt(product.quantity), 0);
+const totalCategories = categories.length;
+const lowStockItems = products.filter(product => product.quantity <= product.minOrder).length;
+totalProductsEl.textContent = totalProducts;
+totalQuantityEl.textContent = totalQuantity;
+totalCategoriesEl.textContent = totalCategories;
+lowStockItemsEl.textContent = lowStockItems;
+}
+// تحديث قائمة الفئات
+function updateCategories() {
+// تحديث datalist للاقتراح التلقائي
+categoriesList.innerHTML = '';
+categories.forEach(category => {
+const option = document.createElement('option');
+option.value = category;
+categoriesList.appendChild(option);
+});
+// تحديث عرض الفئات
+categoriesContainer.innerHTML = '';
+categories.forEach(category => {
+const tag = document.createElement('div');
+tag.className = 'category-tag';
+tag.textContent = category;
+categoriesContainer.appendChild(tag);
+});
+// تحديث قائمة الفئات في التقارير
+reportCategorySelect.innerHTML = '<option value="">جميع الفئات</option>';
+categories.forEach(category => {
+const option = document.createElement('option');
+option.value = category;
+option.textContent = category;
+reportCategorySelect.appendChild(option);
+});
+}
+// تحديث قائمة المنتجات في المدخلات والمخرجات
+function updateProductSelects() {
+inputProductSelect.innerHTML = '<option value="">اختر المنتج</option>';
+outputProductSelect.innerHTML = '<option value="">اختر المنتج</option>';
+products.forEach(product => {
+const inputOption = document.createElement('option');
+inputOption.value = product.id;
+inputOption.textContent = `${product.name} (${product.quantity} متوفر)`;
+inputProductSelect.appendChild(inputOption);
+const outputOption = document.createElement('option');
+outputOption.value = product.id;
+outputOption.textContent = `${product.name} (${product.quantity} متوفر)`;
+outputProductSelect.appendChild(outputOption);
+});
+}
+// إضافة فئة جديدة إذا كانت غير موجودة
+function addCategory(categoryName) {
+if (categoryName && !categories.includes(categoryName)) {
+categories.push(categoryName);
+saveData();
+updateCategories();
+}
+}
+// عرض المنتجات في الجدول
+function renderProducts() {
+inventoryBody.innerHTML = '';
+productsBody.innerHTML = '';
+products.forEach(product => {
+const isLowStock = product.quantity <= product.minOrder;
+// جدول لوحة التحكم
+const inventoryRow = document.createElement('tr');
+if (isLowStock) {
+inventoryRow.classList.add('low-stock');
+}
+inventoryRow.innerHTML = `
+<td>${product.name}</td>
+<td>${product.category}</td>
+<td>${product.quantity}</td>
+<td>${product.minOrder}</td>
+<td>
+${isLowStock ? '<span class="alert-badge">!</span> تحت الحد الأدنى' : 'مستوى جيد'}
+</td>
+`;
+inventoryBody.appendChild(inventoryRow);
+// جدول إدارة المنتجات
+const productsRow = document.createElement('tr');
+const actionsHtml = currentUser.role === 'admin' ?
+`
+<td class="actions">
+<button class="edit-btn" onclick="editProduct('${product.id}')">تعديل</button>
+<button class="delete-btn" onclick="deleteProduct('${product.id}')">حذف</button>
+</td>
+` : `<td class="actions restricted"></td>`;
+productsRow.innerHTML = `
+<td>${product.name}</td>
+<td>${product.category}</td>
+<td>${product.quantity}</td>
+<td>${product.minOrder}</td>
+${actionsHtml}
+`;
+productsBody.appendChild(productsRow);
+});
+updateStats();
+updateProductSelects();
+}
+// إضافة/تعديل منتج
+productForm.addEventListener('submit', function(e) {
+e.preventDefault();
+const id = productIdInput.value;
+const name = productNameInput.value;
+const category = productCategoryInput.value;
+const quantity = parseInt(productQuantityInput.value);
+const minOrder = parseInt(minOrderInput.value);
+if (id) {
+// تعديل منتج موجود
+const productIndex = products.findIndex(p => p.id === id);
+if (productIndex > -1) {
+products[productIndex] = { ...products[productIndex], name, category, quantity, minOrder };
+}
+} else {
+// إضافة منتج جديد
+products.push({ id: generateId(), name, category, quantity, minOrder });
+}
+addCategory(category);
+saveData();
+renderProducts();
+productForm.reset();
+productIdInput.value = '';
+submitBtn.textContent = 'إضافة منتج';
+});
+// تعديل منتج
+function editProduct(id) {
+const product = products.find(p => p.id === id);
+if (product) {
+productIdInput.value = product.id;
+productNameInput.value = product.name;
+productCategoryInput.value = product.category;
+productQuantityInput.value = product.quantity;
+minOrderInput.value = product.minOrder;
+submitBtn.textContent = 'تعديل منتج';
+}
+}
+// حذف منتج
+function deleteProduct(id) {
+if (confirm('هل أنت متأكد أنك تريد حذف هذا المنتج؟')) {
+products = products.filter(p => p.id !== id);
+saveData();
+renderProducts();
+}
+}
+// عرض المدخلات في الجدول
+function renderInputs() {
+inputsBody.innerHTML = '';
+inputs.forEach(input => {
+const product = products.find(p => p.id === input.productId);
+const actionsHtml = currentUser.role === 'admin' ?
+`
+<td class="transaction-actions">
+<button class="delete-transaction-btn" onclick="deleteInput('${input.id}')">حذف</button>
+</td>
+` : `<td class="transaction-actions restricted"></td>`;
+inputsBody.innerHTML += `
+<tr class="input-row">
+<td>${input.date}</td>
+<td>${product ? product.name : 'منتج محذوف'}</td>
+<td>${input.quantity}</td>
+<td>${input.person}</td>
+${actionsHtml}
+</tr>
+`;
+});
+}
+// إضافة مدخل جديد
+inputForm.addEventListener('submit', function(e) {
+e.preventDefault();
+const productId = inputProductSelect.value;
+const quantity = parseInt(inputQuantityInput.value);
+const person = inputPersonInput.value;
+const date = inputDateInput.value;
+const product = products.find(p => p.id === productId);
+if (product) {
+product.quantity += quantity;
+inputs.push({ id: generateId(), productId, quantity, person, date, type: 'input' });
+saveData();
+renderProducts();
+renderInputs();
+renderTransactions();
+inputForm.reset();
+} else {
+alert('المنتج غير موجود.');
+}
+});
+// حذف مدخل
+function deleteInput(id) {
+if (confirm('هل أنت متأكد أنك تريد حذف هذا الإدخال؟ سيتم خصم الكمية من المخزون.')) {
+const input = inputs.find(i => i.id === id);
+if (input) {
+const product = products.find(p => p.id === input.productId);
+if (product) {
+product.quantity -= input.quantity;
+}
+inputs = inputs.filter(i => i.id !== id);
+saveData();
+renderProducts();
+renderInputs();
+renderTransactions();
+}
+}
+}
+// عرض المخرجات في الجدول
+function renderOutputs() {
+outputsBody.innerHTML = '';
+outputs.forEach(output => {
+const product = products.find(p => p.id === output.productId);
+const actionsHtml = currentUser.role === 'admin' ?
+`
+<td class="transaction-actions">
+<button class="delete-transaction-btn" onclick="deleteOutput('${output.id}')">حذف</button>
+</td>
+` : `<td class="transaction-actions restricted"></td>`;
+outputsBody.innerHTML += `
+<tr class="output-row">
+<td>${output.date}</td>
+<td>${product ? product.name : 'منتج محذوف'}</td>
+<td>${output.quantity}</td>
+<td>${output.person}</td>
+${actionsHtml}
+</tr>
+`;
+});
+}
+// إضافة مخرج جديد
+outputForm.addEventListener('submit', function(e) {
+e.preventDefault();
+const productId = outputProductSelect.value;
+const quantity = parseInt(outputQuantityInput.value);
+const person = outputPersonInput.value;
+const date = outputDateInput.value;
+const product = products.find(p => p.id === productId);
+if (product) {
+if (product.quantity >= quantity) {
+product.quantity -= quantity;
+outputs.push({ id: generateId(), productId, quantity, person, date, type: 'output' });
+saveData();
+renderProducts();
+renderOutputs();
+renderTransactions();
+outputForm.reset();
+} else {
+alert('الكمية المتوفرة غير كافية.');
+}
+} else {
+alert('المنتج غير موجود.');
+}
+});
+// حذف مخرج
+function deleteOutput(id) {
+if (confirm('هل أنت متأكد أنك تريد حذف هذا الإخراج؟ سيتم إضافة الكمية إلى المخزون.')) {
+const output = outputs.find(o => o.id === id);
+if (output) {
+const product = products.find(p => p.id === output.productId);
+if (product) {
+product.quantity += output.quantity;
+}
+outputs = outputs.filter(o => o.id !== id);
+saveData();
+renderProducts();
+renderOutputs();
+renderTransactions();
+}
+}
+}
+// عرض جميع الحركات في الجدول
+function renderTransactions() {
+transactionsBody.innerHTML = '';
+const allTransactions = [...inputs, ...outputs].sort((a, b) => new Date(b.date) - new Date(a.date));
+allTransactions.forEach(transaction => {
+const product = products.find(p => p.id === transaction.productId);
+const typeClass = transaction.type === 'input' ? 'input-row' : 'output-row';
+const typeText = transaction.type === 'input' ? 'إدخال' : 'إخراج';
+const actionsHtml = currentUser.role === 'admin' ?
+`
+<td class="transaction-actions">
+<button class="delete-transaction-btn" onclick="deleteTransaction('${transaction.id}', '${transaction.type}')">حذف</button>
+</td>
+` : `<td class="transaction-actions restricted"></td>`;
+transactionsBody.innerHTML += `
+<tr class="${typeClass}">
+<td>${transaction.date}</td>
+<td>${typeText}</td>
+<td>${product ? product.name : 'منتج محذوف'}</td>
+<td>${transaction.quantity}</td>
+<td>${transaction.person}</td>
+${actionsHtml}
+</tr>
+`;
+});
+}
+// حذف حركة (مدخل أو مخرج)
+function deleteTransaction(id, type) {
+if (type === 'input') {
+deleteInput(id);
+} else if (type === 'output') {
+deleteOutput(id);
+}
+}
+// توليد التقارير
+function generateReport() {
+const reportType = document.getElementById('reportType').value;
+const startDate = document.getElementById('startDate').value;
+const endDate = document.getElementById('endDate').value;
+const reportCategory = document.getElementById('reportCategory').value;
+let filteredData = [];
+let reportTitle = '';
+let reportSummaryText = '';
+switch (reportType) {
+case 'inventory':
+reportTitle = 'تقرير المخزون الحالي';
+filteredData = products.filter(product => {
+return reportCategory === '' || product.category === reportCategory;
+});
+reportSummaryText = `إجمالي المنتجات: ${filteredData.length} | إجمالي الكمية: ${filteredData.reduce((sum, p) => sum + p.quantity, 0)}`;
+break;
+case 'movements':
+reportTitle = 'تقرير حركات المخزون';
+filteredData = [...inputs, ...outputs].filter(transaction => {
+const product = products.find(p => p.id === transaction.productId);
+const transactionDate = new Date(transaction.date);
+const start = startDate ? new Date(startDate) : null;
+const end = endDate ? new Date(endDate) : null;
+return (!start || transactionDate >= start) &&
+(!end || transactionDate <= end) &&
+(reportCategory === '' || (product && product.category === reportCategory));
+}).sort((a, b) => new Date(a.date) - new Date(b.date));
+reportSummaryText = `إجمالي الحركات: ${filteredData.length}`;
+break;
+case 'lowstock':
+reportTitle = 'تقرير المنتجات المنخفضة';
+filteredData = products.filter(product => {
+return product.quantity <= product.minOrder && (reportCategory === '' || product.category === reportCategory);
+});
+reportSummaryText = `عدد المنتجات تحت الحد الأدنى: ${filteredData.length}`;
+break;
+case 'inputs':
+reportTitle = 'تقرير المدخلات';
+filteredData = inputs.filter(input => {
+const product = products.find(p => p.id === input.productId);
+const inputDate = new Date(input.date);
+const start = startDate ? new Date(startDate) : null;
+const end = endDate ? new Date(endDate) : null;
+return (!start || inputDate >= start) &&
+(!end || inputDate <= end) &&
+(reportCategory === '' || (product && product.category === reportCategory));
+}).sort((a, b) => new Date(a.date) - new Date(b.date));
+reportSummaryText = `إجمالي المدخلات: ${filteredData.reduce((sum, i) => sum + i.quantity, 0)}`;
+break;
+case 'outputs':
+reportTitle = 'تقرير المخرجات';
+filteredData = outputs.filter(output => {
+const product = products.find(p => p.id === output.productId);
+const outputDate = new Date(output.date);
+const start = startDate ? new Date(startDate) : null;
+const end = endDate ? new Date(endDate) : null;
+return (!start || outputDate >= start) &&
+(!end || outputDate <= end) &&
+(reportCategory === '' || (product && product.category === reportCategory));
+}).sort((a, b) => new Date(a.date) - new Date(b.date));
+reportSummaryText = `إجمالي المخرجات: ${filteredData.reduce((sum, o) => sum + o.quantity, 0)}`;
+break;
+}
+reportSummary.innerHTML = `<h3>${reportTitle}</h3><p>${reportSummaryText}</p>`;
+let tableHtml = `
+<table class="products-table">
+<thead>
+<tr>
+`;
+// بناء رأس الجدول بناءً على نوع التقرير
+if (reportType === 'inventory' || reportType === 'lowstock') {
+tableHtml += `
+<th>اسم المنتج</th>
+<th>الفئة</th>
+<th>الكمية</th>
+<th>الحد الأدنى للطلب</th>
+<th>الحالة</th>
+`;
+} else if (reportType === 'movements') {
+tableHtml += `
+<th>التاريخ</th>
+<th>نوع الحركة</th>
+<th>اسم المنتج</th>
+<th>الكمية</th>
+<th>المستخدم</th>
+`;
+} else if (reportType === 'inputs') {
+tableHtml += `
+<th>التاريخ</th>
+<th>اسم المنتج</th>
+<th>الكمية</th>
+<th>اسم المدخل</th>
+`;
+} else if (reportType === 'outputs') {
+tableHtml += `
+<th>التاريخ</th>
+<th>اسم المنتج</th>
+<th>الكمية</th>
+<th>اسم المخرج</th>
+`;
+}
+tableHtml += `
+</tr>
+</thead>
+<tbody>
+`;
+// بناء صفوف الجدول بناءً على نوع التقرير والبيانات المفلترة
+filteredData.forEach(item => {
+const product = products.find(p => p.id === item.productId);
+if (reportType === 'inventory' || reportType === 'lowstock') {
+const isLowStock = item.quantity <= item.minOrder;
+tableHtml += `
+<tr class="${isLowStock ? 'low-stock' : ''}">
+<td>${item.name}</td>
+<td>${item.category}</td>
+<td>${item.quantity}</td>
+<td>${item.minOrder}</td>
+<td>${isLowStock ? '<span class="alert-badge">!</span> تحت الحد الأدنى' : 'مستوى جيد'}</td>
+</tr>
+`;
+} else if (reportType === 'movements') {
+const typeClass = item.type === 'input' ? 'input-row' : 'output-row';
+const typeText = item.type === 'input' ? 'إدخال' : 'إخراج';
+tableHtml += `
+<tr class="${typeClass}">
+<td>${item.date}</td>
+<td>${typeText}</td>
+<td>${product ? product.name : 'منتج محذوف'}</td>
+<td>${item.quantity}</td>
+<td>${item.person}</td>
+</tr>
+`;
+} else if (reportType === 'inputs') {
+tableHtml += `
+<tr class="input-row">
+<td>${item.date}</td>
+<td>${product ? product.name : 'منتج محذوف'}</td>
+<td>${item.quantity}</td>
+<td>${item.person}</td>
+</tr>
+`;
+} else if (reportType === 'outputs') {
+tableHtml += `
+<tr class="output-row">
+<td>${item.date}</td>
+<td>${product ? product.name : 'منتج محذوف'}</td>
+<td>${item.quantity}</td>
+<td>${item.person}</td>
+</tr>
+`;
+}
+});
+tableHtml += `
+</tbody>
+</table>
+`;
+reportResults.innerHTML = tableHtml;
+}
+// تصدير إلى Excel
+function exportToExcel() {
+const reportType = document.getElementById('reportType').value;
+const reportTitle = document.querySelector('#reportSummary h3').textContent;
+const table = document.querySelector('#reportResults table');
+if (!table) {
+alert('لا يوجد تقرير لتصديره.');
+return;
+}
+const ws = XLSX.utils.table_to_sheet(table);
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, reportTitle);
+XLSX.writeFile(wb, `${reportTitle}.xlsx`);
+}
+// تصدير إلى PDF
+function exportToPDF() {
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF('p', 'pt', 'a4');
+const reportTitle = document.querySelector('#reportSummary h3').textContent;
+const table = document.querySelector('#reportResults table');
+if (!table) {
+alert('لا يوجد تقرير لتصديره.');
+return;
+}
+doc.text(reportTitle, 40, 40);
+doc.autoTable({
+html: '#reportResults table',
+startY: 60,
+styles: { font: 'Amiri', fontStyle: 'normal', halign: 'right' }, // استخدام خط يدعم العربية
+headStyles: { fillColor: [220, 220, 220], textColor: [0, 0, 0] },
+bodyStyles: { textColor: [0, 0, 0] },
+margin: { top: 50, right: 30, bottom: 30, left: 30 },
+});
+// يجب تحميل الخطوط العربية أولاً
+// doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
+// doc.setFont('Amiri');
+doc.save(`${reportTitle}.pdf`);
+}
+// تهيئة التطبيق عند التحميل
+document.addEventListener('DOMContentLoaded', function() {
+checkUserStatus();
+updateCategories();
+updateProductSelects();
+renderProducts();
+renderInputs();
+renderOutputs();
+renderTransactions();
+// تعيين التاريخ الافتراضي لمدخلات ومخرجات المخزن
+const today = new Date().toISOString().split('T')[0];
+if (inputDateInput) inputDateInput.value = today;
+if (outputDateInput) outputDateInput.value = today;
+});
+</script>
+</body>
+</html>
