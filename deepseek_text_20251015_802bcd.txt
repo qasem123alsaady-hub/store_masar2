@@ -1,0 +1,16 @@
+
+## خطوات النشر:
+
+### على Vercel:
+1. احفظ الكود في `index.html`
+2. انشئ ملف `vercel.json`
+3. انشر على GitHub
+4. سجل الدخول到 Vercel واستورد المشروع
+
+### على Firebase Hosting:
+1. `npm install -g firebase-tools`
+2. `firebase login`
+3. `firebase init hosting`
+4. `firebase deploy`
+
+الكود الآن جاهز تماماً للنشر ويعمل بكفاءة! 🚀
